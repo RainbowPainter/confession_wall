@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <h2 class="mb-4"><i class="fas fa-home"></i> 表白广场</h2>
+        
+        {% for confession in confessions %}
+        <div class="card confession-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <h6 class="card-subtitle mb-2 text-muted">
+                        <i class="fas fa-user"></i> {{ confession.user.username }}
+                    </h6>
+                    <small class="text-muted">
+                        <i class="fas fa-clock"></i> {{ confession.created_at|date:"Y-m-d H:i" }}
+                    </small>
+                </div>
+                
+                <p class="card-text">{{ confession.content|linebreaksbr }}</p>
+                
+                {% if confession.image %}
+                <div class="text-center">
+                    <img src="{{ confession.image.url }}" alt="表白图片" class="confession-image">
+                </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div>
+                        <button class="like-btn {% if user.is_authenticated %}like-btn{% endif %}" 
+                                data-id="{{ confession.id }}"
+                                {% if not user.is_authenticated %}disabled{% endif %}
+                                onclick="likeConfession({{ confession.id }})">
+                            <i class="fas fa-heart"></i>
+                            <span class="like-count" data-id="{{ confession.id }}">
+                                {{ confession.likes_count }}
+                            </span>
+                        </button>
+                        
+                        <span class="ms-3 text-muted">
+                            <i class="fas fa-comment"></i> {{ confession.comment_set.count }}
+                        </span>
+                    </div>
+                    
+                    {% if confession.is_pinned %}
+                    <span class="badge bg-warning">
+                        <i class="fas fa-thumbtack"></i> 置顶
+                    </span>
+                    {% endif %}
+                </div>
+
+                <!-- 评论区域 -->
+                <div class="mt-3">
+                    {% for comment in confession.comment_set.all %}
+                    <div class="border-start border-3 ps-3 mb-2">
+                        <small>
+                            <strong>{{ comment.user.username }}</strong>: 
+                            {{ comment.content }}
+                            {% if user.is_authenticated and user == comment.user or user.is_staff %}
+                            <a href="{% url 'delete_comment' comment.id %}" class="text-danger ms-2" 
+                               onclick="return confirm('确定删除这条评论吗？')">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            {% endif %}
+                        </small>
+                    </div>
+                    {% endfor %}
+                    
+                    {% if user.is_authenticated %}
+                    <form method="post" action="{% url 'add_comment' confession.id %}" class="mt-2">
+                        {% csrf_token %}
+                        <div class="input-group">
+                            <input type="text" name="content" class="form-control" placeholder="写下你的评论..." required>
+                            <button class="btn btn-outline-primary" type="submit">发送</button>
+                        </div>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-inbox fa-3x mb-3"></i>
+            <p>还没有表白内容，快来发布第一个表白吧！</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

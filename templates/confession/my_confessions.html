@@ -1,0 +1,63 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-md-8 mx-auto">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2><i class="fas fa-user"></i> 我的表白</h2>
+            <a href="{% url 'create_confession' %}" class="btn btn-primary">
+                <i class="fas fa-plus"></i> 发布新表白
+            </a>
+        </div>
+        
+        {% for confession in confessions %}
+        <div class="card confession-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span class="badge {% if confession.status == 'approved' %}bg-success{% elif confession.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %} status-badge">
+                            {{ confession.get_status_display }}
+                        </span>
+                    </div>
+                    <small class="text-muted">
+                        <i class="fas fa-clock"></i> {{ confession.created_at|date:"Y-m-d H:i" }}
+                    </small>
+                </div>
+                
+                <p class="card-text">{{ confession.content|linebreaksbr }}</p>
+                
+                {% if confession.image %}
+                <div class="text-center">
+                    <img src="{{ confession.image.url }}" alt="表白图片" class="confession-image">
+                </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div>
+                        <span class="text-muted">
+                            <i class="fas fa-heart"></i> {{ confession.likes_count }} 赞
+                        </span>
+                        <span class="text-muted ms-3">
+                            <i class="fas fa-comment"></i> {{ confession.comment_set.count }} 评论
+                        </span>
+                    </div>
+                    
+                    <div>
+                        <a href="{% url 'delete_confession' confession.id %}" class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('确定删除这条表白吗？')">
+                            <i class="fas fa-trash"></i> 删除
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-inbox fa-3x mb-3"></i>
+            <p>你还没有发布过表白</p>
+            <a href="{% url 'create_confession' %}" class="btn btn-primary">发布第一个表白</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

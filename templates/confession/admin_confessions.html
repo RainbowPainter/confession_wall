@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4"><i class="fas fa-cog"></i> 内容管理</h2>
+        
+        <!-- 筛选标签 -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <div class="btn-group" role="group">
+                    <a href="?status=pending" 
+                       class="btn {% if status_filter == 'pending' %}btn-warning{% else %}btn-outline-warning{% endif %}">
+                        待审核
+                    </a>
+                    <a href="?status=approved" 
+                       class="btn {% if status_filter == 'approved' %}btn-success{% else %}btn-outline-success{% endif %}">
+                        已通过
+                    </a>
+                    <a href="?status=rejected" 
+                       class="btn {% if status_filter == 'rejected' %}btn-danger{% else %}btn-outline-danger{% endif %}">
+                        已拒绝
+                    </a>
+                    <a href="?status=all" 
+                       class="btn {% if status_filter == 'all' %}btn-primary{% else %}btn-outline-primary{% endif %}">
+                        全部
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        {% for confession in confessions %}
+        <div class="card confession-card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <h6 class="card-subtitle mb-2">
+                            <i class="fas fa-user"></i> {{ confession.user.username }}
+                            {% if confession.user.userprofile.is_banned %}
+                            <span class="badge bg-danger">已禁言</span>
+                            {% endif %}
+                        </h6>
+                        <span class="badge {% if confession.status == 'approved' %}bg-success{% elif confession.status == 'pending' %}bg-warning{% else %}bg-danger{% endif %}">
+                            {{ confession.get_status_display }}
+                        </span>
+                        {% if confession.is_pinned %}
+                        <span class="badge bg-info">置顶</span>
+                        {% endif %}
+                    </div>
+                    <small class="text-muted">
+                        {{ confession.created_at|date:"Y-m-d H:i" }}
+                    </small>
+                </div>
+                
+                <p class="card-text">{{ confession.content|linebreaksbr }}</p>
+                
+                {% if confession.image %}
+                <div class="text-center">
+                    <img src="{{ confession.image.url }}" alt="表白图片" class="confession-image">
+                </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between align-items-center mt-3">
+                    <div>
+                        <span class="text-muted">
+                            <i class="fas fa-heart"></i> {{ confession.likes_count }} 赞
+                        </span>
+                        <span class="text-muted ms-3">
+                            <i class="fas fa-comment"></i> {{ confession.comment_set.count }} 评论
+                        </span>
+                    </div>
+                    
+                    <div>
+                        {% if confession.status == 'pending' %}
+                        <a href="{% url 'approve_confession' confession.id %}" class="btn btn-sm btn-success">
+                            <i class="fas fa-check"></i> 通过
+                        </a>
+                        <a href="{% url 'reject_confession' confession.id %}" class="btn btn-sm btn-danger">
+                            <i class="fas fa-times"></i> 拒绝
+                        </a>
+                        {% endif %}
+                        
+                        <a href="{% url 'delete_confession' confession.id %}" class="btn btn-sm btn-outline-danger"
+                           onclick="return confirm('确定删除这条表白吗？')">
+                            <i class="fas fa-trash"></i> 删除
+                        </a>
+                        
+                        {% if not confession.user.userprofile.is_banned %}
+                        <a href="{% url 'ban_user' confession.user.id %}" class="btn btn-sm btn-outline-warning"
+                           onclick="return confirm('确定禁言此用户吗？')">
+                            <i class="fas fa-volume-mute"></i> 禁言
+                        </a>
+                        {% else %}
+                        <a href="{% url 'unban_user' confession.user.id %}" class="btn btn-sm btn-outline-info">
+                            <i class="fas fa-volume-up"></i> 解禁
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="text-center text-muted py-5">
+            <i class="fas fa-inbox fa-3x mb-3"></i>
+            <p>没有找到相关内容</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
